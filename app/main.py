@@ -1,8 +1,8 @@
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.routers import rooms
 
+from app.routers import rooms
 from app.database import get_db
 
 app = FastAPI(title="Booking API")
