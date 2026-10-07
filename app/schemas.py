@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from datetime import UTC, datetime, timedelta
+
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from app.models import UserRole
 
@@ -43,3 +45,32 @@ class RoomRead(RoomBase):
 
     id: int
     is_active: bool
+
+MAX_BOOKING_DURATION = timedelta(hours=8)
+
+
+class BookingCreate(BaseModel):
+    room_id: int
+    start_time: AwareDatetime
+    end_time: AwareDatetime
+
+    @model_validator(mode="after")
+    def check_time_range(self):
+        if self.end_time <= self.start_time:
+            raise ValueError("end_time must be after start_time")
+        if self.start_time < datetime.now(UTC):
+            raise ValueError("start_time must be in the future")
+        if self.end_time - self.start_time > MAX_BOOKING_DURATION:
+            raise ValueError("Booking cannot be longer than 8 hours")
+        return self
+
+
+class BookingRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    room_id: int
+    user_id: int
+    start_time: datetime
+    end_time: datetime
+    created_at: datetime
