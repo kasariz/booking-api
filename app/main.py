@@ -4,8 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.routers import rooms
 from app.database import get_db
+from app.routers import auth, rooms
 
 app = FastAPI(title="Booking API")
+app.include_router(auth.router)
 app.include_router(rooms.router)
 
 @app.get("/health")

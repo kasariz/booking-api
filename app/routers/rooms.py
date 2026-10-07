@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Room
 from app.schemas import RoomCreate, RoomRead, RoomUpdate
+from app.dependencies import require_admin
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -17,7 +18,7 @@ def get_room_or_404(room_id: int, db: Session) -> Room:
     return room
 
 
-@router.post("", response_model=RoomRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=RoomRead, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])
 def create_room(data: RoomCreate, db: Session = Depends(get_db)):
     room = Room(**data.model_dump())
     db.add(room)
@@ -41,7 +42,7 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
     return get_room_or_404(room_id, db)
 
 
-@router.patch("/{room_id}", response_model=RoomRead)
+@router.patch("/{room_id}", response_model=RoomRead, dependencies=[Depends(require_admin)])
 def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db)):
     room = get_room_or_404(room_id, db)
     for field, value in data.model_dump(exclude_unset=True).items():
@@ -55,7 +56,7 @@ def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db)):
     return room
 
 
-@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
 def deactivate_room(room_id: int, db: Session = Depends(get_db)):
     room = get_room_or_404(room_id, db)
     room.is_active = False
